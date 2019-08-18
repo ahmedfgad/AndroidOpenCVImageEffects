@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/stitchHorizontal"
+        android:text="Stitch Images Horizontally"
+        android:onClick="stitchHorizontal"/>
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/stitchVertical"
+        android:text="Stitch Images Vertically"
+        android:onClick="stitchVectical"/>
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/reduceColors"
+        android:text="Reduce Colors"
+        android:onClick="reduceImageColors"/>
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/reduceColorsGray"
+        android:text="Reduce Colors Gray"
+        android:onClick="reduceImageColorsGray"/>
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/medianFilter"
+        android:text="Median Filter"
+        android:onClick="medianFilter"/>
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/adaptiveThreshold"
+        android:text="Adaptive Threshold"
+        android:onClick="adaptiveThreshold"/>
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/cartoon"
+        android:text="Cartoon Image"
+        android:onClick="cartoonImage"/>
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/opencvImg"/>
+
+</LinearLayout>
