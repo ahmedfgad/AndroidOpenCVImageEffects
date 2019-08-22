@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
         return imgBitmap;
     }
 
-    void saveBitmap(Bitmap imgBitmap, String fileNameOpening){
+    public void saveBitmap(Bitmap imgBitmap, String fileNameOpening){
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss", Locale.US);
         Date now = new Date();
         String fileName = fileNameOpening + "_" + formatter.format(now) + ".jpg";

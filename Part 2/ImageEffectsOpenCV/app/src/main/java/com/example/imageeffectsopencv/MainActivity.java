@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
         OpenCVLoader.initDebug();
     }
 
-    void cartoonImage(View view) {
+    public void cartoonImage(View view) {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inScaled = false; // Leaving it to true enlarges the decoded image size.
         Bitmap original = BitmapFactory.decodeResource(getResources(), R.drawable.part3, options);
@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
         saveBitmap(imgBitmap, "cartoon");
     }
 
-    void reduceImageColors(View view){
+    public void reduceImageColors(View view){
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inScaled = false; // Leaving it to true enlarges the decoded image size.
         Bitmap original = BitmapFactory.decodeResource(getResources(), R.drawable.part3, options);
@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
         saveBitmap(imgBitmap, "reduce_colors");
     }
 
-    void reduceImageColorsGray(View view){
+    public void reduceImageColorsGray(View view){
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inScaled = false; // Leaving it to true enlarges the decoded image size.
         Bitmap original = BitmapFactory.decodeResource(getResources(), R.drawable.part3, options);
@@ -97,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
         saveBitmap(imgBitmap, "reduce_colors_gray");
     }
 
-    void medianFilter(View view) {
+    public void medianFilter(View view) {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inScaled = false; // Leaving it to true enlarges the decoded image size.
         Bitmap original = BitmapFactory.decodeResource(getResources(), R.drawable.part3, options);
@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
         saveBitmap(imgBitmap, "median_filter");
     }
 
-    void adaptiveThreshold(View view) {
+    public void adaptiveThreshold(View view) {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inScaled = false; // Leaving it to true enlarges the decoded image size.
         Bitmap original = BitmapFactory.decodeResource(getResources(), R.drawable.part3, options);
@@ -138,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
         saveBitmap(imgBitmap, "adaptive_threshold");
     }
 
-    void stitchVectical(View view){
+    public void stitchVectical(View view){
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inScaled = false; // Leaving it to true enlarges the decoded image size.
         Bitmap im1 = BitmapFactory.decodeResource(getResources(), R.drawable.part1, options);
@@ -158,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
         saveBitmap(imgBitmap, "stitch_vectical");
     }
 
-    void stitchHorizontal(View view){
+    public void stitchHorizontal(View view){
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inScaled = false; // Leaving it to true enlarges the decoded image size.
         Bitmap im1 = BitmapFactory.decodeResource(getResources(), R.drawable.part1, options);
@@ -263,7 +263,7 @@ public class MainActivity extends AppCompatActivity {
         return imgBitmap;
     }
 
-    void saveBitmap(Bitmap imgBitmap, String fileNameOpening){
+    public void saveBitmap(Bitmap imgBitmap, String fileNameOpening){
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss", Locale.US);
         Date now = new Date();
         String fileName = fileNameOpening + "_" + formatter.format(now) + ".jpg";
