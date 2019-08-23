@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.AnimationDrawable;
+import android.graphics.drawable.BitmapDrawable;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
@@ -31,6 +33,7 @@ import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.lang.reflect.Array;
@@ -45,15 +48,111 @@ import static org.opencv.core.Core.LUT;
 import static org.opencv.core.CvType.CV_8UC1;
 
 public class MainActivity extends AppCompatActivity {
+
     final int SELECT_MULTIPLE_IMAGES = 1;
-    ArrayList<String> selectedImagesPaths;
-    boolean imagesSelected = false;
+    ArrayList<String> selectedImagesPaths; // Paths of the image(s) selected by the user.
+    boolean imagesSelected = false; // Whether the user selected at least an image or not.
+
+    Bitmap resultBitmap; // Result of the last operation.
+    String resultName = null; // File name to save the result of the last operation.
+
+    boolean GIFLastEffect = false;
+    ByteArrayOutputStream GIFImageByteArray;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         OpenCVLoader.initDebug();
+    }
+
+    public void createAnimatedGIF(View view) {
+        List<Mat> imagesMatList = returnMultipleSelectedImages(selectedImagesPaths, 2, false);
+        if (imagesMatList == null) {
+            return;
+        }
+
+        GIFImageByteArray = createGIF(imagesMatList, 150);
+        resultName = "animated_GIF";
+        GIFLastEffect = true;
+    }
+
+    ByteArrayOutputStream createGIF(List<Mat> imagesMatList, int delay) {
+        ByteArrayOutputStream imageByteArray = new ByteArrayOutputStream();
+        // Implementation of the AnimatedGifEncoder.java file: https://gist.githubusercontent.com/wasabeef/8785346/raw/53a15d99062a382690275ef5666174139b32edb5/AnimatedGifEncoder.java
+        AnimatedGifEncoder encoder = new AnimatedGifEncoder();
+        encoder.start(imageByteArray);
+
+        AnimationDrawable animatedGIF = new AnimationDrawable();
+
+        for (Mat img : imagesMatList) {
+            Bitmap imgBitmap = Bitmap.createBitmap(img.cols(), img.rows(), Bitmap.Config.ARGB_8888);
+            Utils.matToBitmap(img, imgBitmap);
+            encoder.setDelay(delay);
+            encoder.addFrame(imgBitmap);
+
+            animatedGIF.addFrame(new BitmapDrawable(getResources(), imgBitmap), delay);
+        }
+
+        encoder.finish();
+
+        ImageView imageView = findViewById(R.id.opencvImg);
+        imageView.setBackground(animatedGIF); // attach animation to a view
+        animatedGIF.run();
+
+        return imageByteArray;
+    }
+
+    void saveGif(ByteArrayOutputStream imageByteArray, String fileNameOpening) {
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss", Locale.US);
+        Date now = new Date();
+        String fileName = fileNameOpening + "_" + formatter.format(now) + ".gif";
+
+        FileOutputStream outStream;
+        try {
+            // Get a public path on the device storage for saving the file. Note that the word external does not mean the file is saved in the SD card. It is still saved in the internal storage.
+            File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+
+            // Creates a directory for saving the image.
+            File saveDir = new File(path + "/HeartBeat/");
+
+            // If the directory is not created, create it.
+            if (!saveDir.exists())
+                saveDir.mkdirs();
+
+            // Create the image file within the directory.
+            File fileDir = new File(saveDir, fileName); // Creates the file.
+
+            // Write into the image file by the BitMap content.
+            outStream = new FileOutputStream(fileDir);
+            outStream.write(imageByteArray.toByteArray());
+
+            MediaScannerConnection.scanFile(this.getApplicationContext(),
+                    new String[]{fileDir.toString()}, null,
+                    new MediaScannerConnection.OnScanCompletedListener() {
+                        public void onScanCompleted(String path, Uri uri) {
+                        }
+                    });
+
+            // Close the output stream.
+            outStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void saveImage(View v) {
+        if (resultName == null) {
+            Toast.makeText(getApplicationContext(), "Please Apply an Operation to Save its Result.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        if (GIFLastEffect == true) {
+            saveGif(GIFImageByteArray, "animated_GIF");
+        } else {
+            saveBitmap(resultBitmap, resultName);
+        }
+        Toast.makeText(getApplicationContext(), "Image Saved Successfully.", Toast.LENGTH_LONG).show();
     }
 
     public void selectImage(View v) {
@@ -64,7 +163,6 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(Intent.createChooser(intent, "Select Picture"), SELECT_MULTIPLE_IMAGES);
     }
 
-    // The core of the implementation of the onActivityResult() callback method for selecting multiple images is taken from this Stackoverflow answer by Laith Mihyar: https://stackoverflow.com/a/34047251/5426539
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         try {
@@ -81,11 +179,12 @@ public class MainActivity extends AppCompatActivity {
                     imagesSelected = true;
                 } else {
                     // When multiple images are selected.
+                    // Thanks tp Laith Mihyar for this Stackoverflow answer : https://stackoverflow.com/a/34047251/5426539
                     if (data.getClipData() != null) {
-                        ClipData mClipData = data.getClipData();
-                        for (int i = 0; i < mClipData.getItemCount(); i++) {
+                        ClipData clipData = data.getClipData();
+                        for (int i = 0; i < clipData.getItemCount(); i++) {
 
-                            ClipData.Item item = mClipData.getItemAt(i);
+                            ClipData.Item item = clipData.getItemAt(i);
                             Uri uri = item.getUri();
 
                             currentImagePath = getPath(getApplicationContext(), uri);
@@ -99,6 +198,7 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 Toast.makeText(this, "You haven't Picked any Image.", Toast.LENGTH_LONG).show();
             }
+            Toast.makeText(getApplicationContext(), selectedImagesPaths.size() + " Image(s) Selected.", Toast.LENGTH_LONG).show();
         } catch (Exception e) {
             Toast.makeText(this, "Something Went Wrong.", Toast.LENGTH_LONG).show();
             e.printStackTrace();
@@ -126,6 +226,8 @@ public class MainActivity extends AppCompatActivity {
 //
 //        Utils.bitmapToMat(img1MaskBitmap, img1Mask);
 
+        GIFLastEffect = false;
+
         List<Mat> imagesMatList = returnMultipleSelectedImages(selectedImagesPaths, 3, false);
         if (imagesMatList == null) {
             return;
@@ -138,12 +240,11 @@ public class MainActivity extends AppCompatActivity {
 
         Mat result = regionBlending(imagesMatList.get(0), imagesMatList.get(1), img1Mask);
 
-        Bitmap imgBitmap = Bitmap.createBitmap(result.cols(), result.rows(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(result, imgBitmap);
-
+        resultBitmap = Bitmap.createBitmap(result.cols(), result.rows(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(result, resultBitmap);
+        resultName = "region_blending";
         ImageView imageView = findViewById(R.id.opencvImg);
-        imageView.setImageBitmap(imgBitmap);
-        saveBitmap(imgBitmap, "region_blending");
+        imageView.setImageBitmap(resultBitmap);
     }
 
     public void blendImages(View view) {
@@ -159,6 +260,8 @@ public class MainActivity extends AppCompatActivity {
 //        Utils.bitmapToMat(img2Bitmap, img2);
 //        Imgproc.cvtColor(img2, img2, Imgproc.COLOR_BGRA2BGR);
 
+        GIFLastEffect = false;
+
         List<Mat> imagesMatList = returnMultipleSelectedImages(selectedImagesPaths, 2, false);
         if (imagesMatList == null) {
             return;
@@ -166,18 +269,20 @@ public class MainActivity extends AppCompatActivity {
 
         Mat result = imageBlending(imagesMatList.get(0), imagesMatList.get(1), 128.0);
 
-        Bitmap imgBitmap = Bitmap.createBitmap(result.cols(), result.rows(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(result, imgBitmap);
+        resultBitmap = Bitmap.createBitmap(result.cols(), result.rows(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(result, resultBitmap);
+        resultName = "image_blending";
 
         ImageView imageView = findViewById(R.id.opencvImg);
-        imageView.setImageBitmap(imgBitmap);
-        saveBitmap(imgBitmap, "image_blending");
+        imageView.setImageBitmap(resultBitmap);
     }
 
     public void cartoonImage(View view) {
 //        BitmapFactory.Options options = new BitmapFactory.Options();
 //        options.inScaled = false; // Leaving it to true enlarges the decoded image size.
 //        Bitmap original = BitmapFactory.decodeResource(getResources(), R.drawable.part3, options);
+
+        GIFLastEffect = false;
 
         Bitmap original = returnSingleImageSelected(selectedImagesPaths);
         if (original == null) {
@@ -190,18 +295,20 @@ public class MainActivity extends AppCompatActivity {
 
         Mat result = cartoon(img1, 80, 15, 10);
 
-        Bitmap imgBitmap = Bitmap.createBitmap(result.cols(), result.rows(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(result, imgBitmap);
+        resultBitmap = Bitmap.createBitmap(result.cols(), result.rows(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(result, resultBitmap);
+        resultName = "cartoon";
 
         ImageView imageView = findViewById(R.id.opencvImg);
-        imageView.setImageBitmap(imgBitmap);
-        saveBitmap(imgBitmap, "cartoon");
+        imageView.setImageBitmap(resultBitmap);
     }
 
     public void reduceImageColors(View view) {
 //        BitmapFactory.Options options = new BitmapFactory.Options();
 //        options.inScaled = false; // Leaving it to true enlarges the decoded image size.
 //        Bitmap original = BitmapFactory.decodeResource(getResources(), R.drawable.part3, options);
+
+        GIFLastEffect = false;
 
         Bitmap original = returnSingleImageSelected(selectedImagesPaths);
         if (original == null) {
@@ -213,12 +320,12 @@ public class MainActivity extends AppCompatActivity {
 
         Mat result = reduceColors(img1, 80, 15, 10);
 
-        Bitmap imgBitmap = Bitmap.createBitmap(result.cols(), result.rows(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(result, imgBitmap);
+        resultBitmap = Bitmap.createBitmap(result.cols(), result.rows(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(result, resultBitmap);
+        resultName = "reduce_colors";
 
         ImageView imageView = findViewById(R.id.opencvImg);
-        imageView.setImageBitmap(imgBitmap);
-        saveBitmap(imgBitmap, "reduce_colors");
+        imageView.setImageBitmap(resultBitmap);
     }
 
     Bitmap returnSingleImageSelected(ArrayList<String> selectedImages) {
@@ -235,6 +342,8 @@ public class MainActivity extends AppCompatActivity {
 //        options.inScaled = false; // Leaving it to true enlarges the decoded image size.
 //        Bitmap original = BitmapFactory.decodeResource(getResources(), R.drawable.part3, options);
 
+        GIFLastEffect = false;
+
         Bitmap original = returnSingleImageSelected(selectedImagesPaths);
         if (original == null) {
             return;
@@ -246,18 +355,20 @@ public class MainActivity extends AppCompatActivity {
         Imgproc.cvtColor(img1, img1, Imgproc.COLOR_BGR2GRAY);
         Mat result = reduceColorsGray(img1, 5);
 
-        Bitmap imgBitmap = Bitmap.createBitmap(result.cols(), result.rows(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(result, imgBitmap);
+        resultBitmap = Bitmap.createBitmap(result.cols(), result.rows(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(result, resultBitmap);
+        resultName = "reduce_colors_gray";
 
         ImageView imageView = findViewById(R.id.opencvImg);
-        imageView.setImageBitmap(imgBitmap);
-        saveBitmap(imgBitmap, "reduce_colors_gray");
+        imageView.setImageBitmap(resultBitmap);
     }
 
     public void medianFilter(View view) {
 //        BitmapFactory.Options options = new BitmapFactory.Options();
 //        options.inScaled = false; // Leaving it to true enlarges the decoded image size.
 //        Bitmap original = BitmapFactory.decodeResource(getResources(), R.drawable.part3, options);
+
+        GIFLastEffect = false;
 
         Bitmap original = returnSingleImageSelected(selectedImagesPaths);
         if (original == null) {
@@ -271,18 +382,20 @@ public class MainActivity extends AppCompatActivity {
 
         Imgproc.medianBlur(medianFilter, medianFilter, 15);
 
-        Bitmap imgBitmap = Bitmap.createBitmap(medianFilter.cols(), medianFilter.rows(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(medianFilter, imgBitmap);
+        resultBitmap = Bitmap.createBitmap(medianFilter.cols(), medianFilter.rows(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(medianFilter, resultBitmap);
+        resultName = "median_filter";
 
         ImageView imageView = findViewById(R.id.opencvImg);
-        imageView.setImageBitmap(imgBitmap);
-        saveBitmap(imgBitmap, "median_filter");
+        imageView.setImageBitmap(resultBitmap);
     }
 
     public void adaptiveThreshold(View view) {
 //        BitmapFactory.Options options = new BitmapFactory.Options();
 //        options.inScaled = false; // Leaving it to true enlarges the decoded image size.
 //        Bitmap original = BitmapFactory.decodeResource(getResources(), R.drawable.part3, options);
+
+        GIFLastEffect = false;
 
         Bitmap original = returnSingleImageSelected(selectedImagesPaths);
         if (original == null) {
@@ -297,12 +410,12 @@ public class MainActivity extends AppCompatActivity {
 
         Imgproc.adaptiveThreshold(adaptiveTh, adaptiveTh, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 9, 2);
 
-        Bitmap imgBitmap = Bitmap.createBitmap(adaptiveTh.cols(), adaptiveTh.rows(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(adaptiveTh, imgBitmap);
+        resultBitmap = Bitmap.createBitmap(adaptiveTh.cols(), adaptiveTh.rows(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(adaptiveTh, resultBitmap);
+        resultName = "adaptive_threshold";
 
         ImageView imageView = findViewById(R.id.opencvImg);
-        imageView.setImageBitmap(imgBitmap);
-        saveBitmap(imgBitmap, "adaptive_threshold");
+        imageView.setImageBitmap(resultBitmap);
     }
 
     List<Mat> returnMultipleSelectedImages(ArrayList<String> selectedImages, int numImagesRequired, boolean moreAccepted) {
@@ -355,15 +468,18 @@ public class MainActivity extends AppCompatActivity {
 //        Utils.bitmapToMat(im2, img2);
 //        Utils.bitmapToMat(im3, img3);
 
+        GIFLastEffect = false;
+
         List<Mat> imagesMatList = returnMultipleSelectedImages(selectedImagesPaths, 2, true);
         if (imagesMatList == null) {
             return;
         }
 
-        Bitmap imgBitmap = stitchImagesVectical(imagesMatList);
+        resultBitmap = stitchImagesVectical(imagesMatList);
+        resultName = "stitch_vectical";
+
         ImageView imageView = findViewById(R.id.opencvImg);
-        imageView.setImageBitmap(imgBitmap);
-        saveBitmap(imgBitmap, "stitch_vectical");
+        imageView.setImageBitmap(resultBitmap);
     }
 
     public void stitchHorizontal(View view) {
@@ -380,15 +496,18 @@ public class MainActivity extends AppCompatActivity {
 //        Utils.bitmapToMat(im2, img2);
 //        Utils.bitmapToMat(im3, img3);
 
+        GIFLastEffect = false;
+
         List<Mat> imagesMatList = returnMultipleSelectedImages(selectedImagesPaths, 2, true);
         if (imagesMatList == null) {
             return;
         }
 
-        Bitmap imgBitmap = stitchImagesHorizontal(imagesMatList);
+        resultBitmap = stitchImagesHorizontal(imagesMatList);
+        resultName = "stitch_horizontal";
+
         ImageView imageView = findViewById(R.id.opencvImg);
-        imageView.setImageBitmap(imgBitmap);
-        saveBitmap(imgBitmap, "stitch_horizontal");
+        imageView.setImageBitmap(resultBitmap);
     }
 
     Mat regionBlending(Mat img, Mat img2, Mat mask) {

@@ -1,75 +1,117 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <Button
+    <GridLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/stitchHorizontal"
-        android:text="Stitch Images Horizontally"
-        android:onClick="stitchHorizontal"/>
-    <Button
+        android:columnCount="2"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/stitchHorizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="stitchHorizontal"
+            android:text="Stitch Horizontally" />
+
+        <Button
+            android:id="@+id/stitchVertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="stitchVectical"
+            android:text="Stitch Vertically" />
+
+        <Button
+            android:id="@+id/reduceColors"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="reduceImageColors"
+            android:text="Reduce Colors" />
+
+        <Button
+            android:id="@+id/reduceColorsGray"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="reduceImageColorsGray"
+            android:text="Reduce Colors Gray" />
+
+        <Button
+            android:id="@+id/medianFilter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="medianFilter"
+            android:text="Median Filter" />
+
+        <Button
+            android:id="@+id/adaptiveThreshold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="adaptiveThreshold"
+            android:text="Adaptive Threshold" />
+
+        <Button
+            android:id="@+id/cartoon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="cartoonImage"
+            android:text="Cartoon Image" />
+
+        <Button
+            android:id="@+id/transparency"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="blendImages"
+            android:text="Image Blending" />
+
+        <Button
+            android:id="@+id/regionBlending"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="blendRegions"
+            android:text="Region Blending" />
+
+        <Button
+            android:id="@+id/animatedGIF"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="createAnimatedGIF"
+            android:text="GIF" />
+
+    </GridLayout>
+
+    <GridLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/stitchVertical"
-        android:text="Stitch Images Vertically"
-        android:onClick="stitchVectical"/>
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/reduceColors"
-        android:text="Reduce Colors"
-        android:onClick="reduceImageColors"/>
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/reduceColorsGray"
-        android:text="Reduce Colors Gray"
-        android:onClick="reduceImageColorsGray"/>
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/medianFilter"
-        android:text="Median Filter"
-        android:onClick="medianFilter"/>
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/adaptiveThreshold"
-        android:text="Adaptive Threshold"
-        android:onClick="adaptiveThreshold"/>
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/cartoon"
-        android:text="Cartoon Image"
-        android:onClick="cartoonImage"/>
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/transparency"
-        android:text="Image Blending"
-        android:onClick="blendImages"/>
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/regionBlending"
-        android:text="Region Blending"
-        android:onClick="blendRegions"/>
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/selectImage"
-        android:text="Select Image(s)"
-        android:onClick="selectImage"/>
+        android:columnCount="2"
+        android:rowCount="1"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/selectImage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#FFCCE5"
+            android:onClick="selectImage"
+            android:text="Select Image(s)" />
+
+        <Button
+            android:id="@+id/saveImage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#FFCCE5"
+            android:layout_gravity="center"
+            android:onClick="saveImage"
+            android:text="Save Image" />
+    </GridLayout>
+
     <ImageView
+        android:id="@+id/opencvImg"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/opencvImg"/>
+        android:layout_height="wrap_content" />
 
 </LinearLayout>
